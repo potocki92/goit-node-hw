@@ -25,12 +25,9 @@ const listContacts = async () => {
 };
 
 const getContactById = async (contactId) => {
-  console.log(contactId);
   const contactsData = await listContacts();
   const contact = contactsData.filter(({ id }) => id === contactId);
-
-  console.log(contact);
-  if (!contact) {
+  if (contact.length === 0) {
     throw new Error("Contact not found");
   }
 
@@ -50,7 +47,6 @@ const removeContact = async (contactId) => {
   contactsData.splice(contactIndex, 1);
   await saveArrayToFile(contactsPath, contactsData);
 };
-
 
 const addContact = async (name, email, phone) => {
   const contacts = await listContacts();
