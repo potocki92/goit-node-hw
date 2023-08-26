@@ -6,6 +6,7 @@ const {
   addContact,
   removeContact,
   updateContact,
+  updateFavoriteStatus,
 } = require("../../models/contacts");
 
 const router = express.Router();
@@ -46,11 +47,9 @@ router.post("/", async (req, res, next) => {
     const { error } = schema.validate({ name, email, phone });
 
     if (error) {
-      res
-        .status(400)
-        .json({
-          message: `missing required ${error.details[0].context.key} - field`,
-        });
+      res.status(400).json({
+        message: `missing required ${error.details[0].context.key} - field`,
+      });
       return;
     }
 
@@ -108,4 +107,24 @@ router.put("/:contactId", async (req, res, next) => {
   }
 });
 
+router.patch("/:contactId/favorite", async (req, res, next) => {
+  try {
+    const contactId = req.params.contactId;
+    const { favorite } = req.body;
+
+    if (typeof favorite !== "boolean") {
+      return res.status(400).json({ message: "missing field favorite" });
+    }
+
+    const updatedContact = await updateFavoriteStatus(contactId, favorite);
+
+    if (updatedContact) {
+      res.status(200).json(updatedContact);
+    } else {
+      res.status(404).json({ message: "Not found" });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
 module.exports = router;
