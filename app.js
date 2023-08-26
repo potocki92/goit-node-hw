@@ -15,13 +15,19 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
 
-mongoose
-.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-})
-.then(() => console.log("Database connection successful"))
-.catch((error) => console.error(error));
+});
+
+mongoose.connection.on("error", (error) => {
+  console.error("Database connection error:", error);
+  process.exit(1);
+});
+
+mongoose.connection.once("open", () => {
+  console.log("Database connection successful");
+});
 
 app.use("/api/contacts", contactsRouter);
 
