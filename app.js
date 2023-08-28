@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 const contactsRouter = require("./routes/api/contacts");
+const userRouter = require("./routes/api/user");
 
 const app = express();
 
@@ -29,6 +30,7 @@ mongoose.connection.once("open", () => {
   console.log("Database connection successful");
 });
 
+app.use("/api/users", userRouter);
 app.use("/api/contacts", contactsRouter);
 
 app.use((req, res) => {
