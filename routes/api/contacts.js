@@ -8,6 +8,7 @@ const {
   updateContact,
   updateFavoriteStatus,
 } = require("../../models/contacts");
+const { authenticateToken } = require("../../middleware/authenticateToken");
 
 const router = express.Router();
 
@@ -34,10 +35,10 @@ router.get("/:contactId", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", authenticateToken, async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
-
+    const ownerId = req.user._id;
     const schema = Joi.object({
       name: Joi.string().required(),
       email: Joi.string().email().required(),
@@ -53,7 +54,7 @@ router.post("/", async (req, res, next) => {
       return;
     }
 
-    const newContact = await addContact(name, email, phone);
+    const newContact = await addContact(name, email, phone, ownerId);
     res.status(201).json(newContact);
   } catch (error) {
     next(error);

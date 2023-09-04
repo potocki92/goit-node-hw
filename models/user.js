@@ -1,15 +1,10 @@
+const {
+  generateToken,
+  setTokenToData,
+} = require("../middleware/authenticateToken.js");
 const User = require("../models/userModel.js");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 
-const generateToken = (user) => {
-  const payload = {
-    userId: user._id,
-    email: user.email,
-  };
-
-  return jwt.sign(payload, "abcsecret", { expiresIn: "1h" });
-};
 const addUser = async (email, password) => {
   try {
     const existingUser = await User.findOne({ email });
@@ -51,8 +46,10 @@ const loginUser = async (email, password) => {
 
     const token = generateToken(user);
 
+    const setToken = await setTokenToData(user._id, token);
+    console.log(token, setToken);
     return {
-      token,
+      token: setToken.token,
       user: {
         email: user.email,
         subscription: user.subscription,
@@ -64,7 +61,12 @@ const loginUser = async (email, password) => {
   }
 };
 
+const logoutUser = async (userId) => {
+  console.log(userId);
+};
+
 module.exports = {
   addUser,
   loginUser,
+  logoutUser,
 };

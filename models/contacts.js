@@ -25,13 +25,14 @@ const removeContact = async (contactId) => {
   return contact;
 };
 
-const addContact = async (name, email, phone) => {
+const addContact = async (name, email, phone, ownerId) => {
   try {
     const newContact = await Contact.create({
       name,
       email,
       phone,
       favorite: false,
+      owner: ownerId,
     });
 
     return newContact;
