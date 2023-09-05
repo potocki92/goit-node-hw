@@ -3,10 +3,10 @@ const logger = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-
 dotenv.config();
-const contactsRouter = require("./routes/api/contacts");
-const userRouter = require("./routes/api/user");
+require("./config/passport");
+const contactsRouter = require("./routes/contacts");
+const userRouter = require("./routes/user");
 
 const app = express();
 

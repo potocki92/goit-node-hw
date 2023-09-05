@@ -19,12 +19,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
 });
+userSchema.methods.setPassword = function (password) {
+  this.password = bCrypt.hashSync(
+    password,
+    bCrypt.genSaltSync(6)
+  );
+};
 
+userSchema.methods.validPassword = function (password) {
+  return bCrypt.compareSync(password, this.password);
+};
 const User = new mongoose.model("User", userSchema);
 
 module.exports = User;
