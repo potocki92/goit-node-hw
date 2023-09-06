@@ -35,7 +35,7 @@ const passwordValidator = async (password, userPassword) => {
 
 const findUser = async (email) => {
   try {
-    const user = await findUserByEmail( email );
+    const user = await findUserByEmail(email);
     return user;
   } catch (err) {
     console.error(err);
@@ -52,7 +52,7 @@ const signup = async (req, res, _) => {
     }
 
     const toLowerCaseEmail = email.toLowerCase();
-    const user = await findUserByEmail( toLowerCaseEmail );
+    const user = await findUserByEmail(toLowerCaseEmail);
 
     if (user) {
       return res.status(409).json({
@@ -64,7 +64,10 @@ const signup = async (req, res, _) => {
     }
 
     const hashedPassword = await hashPassword(password);
-    await new User({ toLowerCaseEmail, hashedPassword }).save();
+    await new User({
+      email: toLowerCaseEmail,
+      password: hashedPassword,
+    }).save();
     res.status(201).json({
       status: "Created",
       code: 201,
@@ -90,7 +93,7 @@ const login = async (req, res, _) => {
     }
 
     const toLowerCaseEmail = email.toLowerCase();
-    const user = await findUserByEmail( toLowerCaseEmail );
+    const user = await findUserByEmail(toLowerCaseEmail);
     const id = user.id;
     const isPasswordValid = await passwordValidator(password, user.password);
 
