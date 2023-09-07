@@ -1,75 +1,89 @@
 const Contact = require("../models/contacts.model");
-
-const getContactsPaginated = async ({ favorite, owner, page, limit }) => {
-  const query = { owner };
-  if (favorite) {
-    query.favorite = favorite;
+const listContacts = async () => {
+  try {
+    const data = await Contact.find();
+    return data;
+  } catch (error) {
+    throw new Error("Error reading contacts data");
   }
-
-  const totalHits = await Contact.find(query).countDocuments();
-  const totalPages = Math.ceil(totalHits / limit);
-  const currentPage = Math.min(page, totalPages);
-
-  if (page > totalPages) {
-    return null;
-  }
-
-  const pagination = {
-    currentPage,
-    totalPages,
-    totalHits,
-  };
-
-  const contacts = await Contact.find(query)
-    .skip((page - 1) * limit)
-    .limit(limit);
-
-  const result = {
-    pagination,
-    contacts,
-  };
-
-  return result;
 };
 
-const getContactByIdAndOwner = async ({ owner, id }) =>
-  await Contact.findOne({ _id: id, owner });
-
-const createContact = async ({ name, email, phone, owner }) =>
-  await Contact.create({ name, email, phone, owner });
-
-const updateContactByIdAndOwner = async ({
-  id,
-  name,
-  email,
-  phone,
-  favorite,
-  owner,
-}) => {
-  const contact = await Contact.findOne({ _id: id, owner });
+const getContactById = async (contactId) => {
+  const contact = await Contact.findById(contactId);
   if (!contact) {
-    return null;
+    throw new Error("Contact not found");
   }
-  return await Contact.findByIdAndUpdate(
-    { _id: id },
-    { name, email, phone, favorite, owner },
-    { new: true }
-  );
+  return contact;
 };
 
-const removeContactByIdAndOwner = async ({ id, owner }) => {
-  const contact = await Contact.findOne({ _id: id, owner });
-  if (!contact) {
-    return null;
-  }
+const removeContact = async (contactId) => {
+  const contact = await Contact.findByIdAndDelete(contactId);
 
-  return await Contact.findByIdAndRemove({ _id: id });
+  if (!contact) {
+    throw new Error("Contact not found");
+  }
+  return contact;
+};
+
+const addContact = async (name, email, phone, owner) => {
+  try {
+    const newContact = await Contact.create({
+      name,
+      email,
+      phone,
+      owner,
+      favorite: false,
+    });
+
+    return newContact;
+  } catch (error) {
+    console.error("Error during contact addition:", error);
+    throw error;
+  }
+};
+
+const update = async (userId, contactId, body) => {
+  try {
+    const contact = await Contact.findByIdAndUpdate(
+      { owner: userId, _id: contactId },
+      body,
+      {
+        runValidators: true,
+        new: true,
+      }
+    );
+
+    if (!contact) {
+      throw new Error("Contact not found");
+    }
+
+    return contact;
+  } catch (error) {
+    console.error("Error during contact update:", error);
+    throw error;
+  }
+};
+
+const updateFavoriteStatus = async (contactId, favorite) => {
+  try {
+    const updatedContact = await Contact.findByIdAndUpdate(
+      contactId,
+      { $set: { favorite } },
+      { new: true }
+    );
+
+    return updatedContact;
+  } catch (error) {
+    console.error("Error during favorite contact status update:", error);
+    throw error;
+  }
 };
 
 module.exports = {
-  getContactsPaginated,
-  getContactByIdAndOwner,
-  createContact,
-  updateContactByIdAndOwner,
-  removeContactByIdAndOwner,
+  listContacts,
+  getContactById,
+  removeContact,
+  addContact,
+  update,
+  updateFavoriteStatus,
 };
