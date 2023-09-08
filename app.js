@@ -3,9 +3,10 @@ const logger = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-
 dotenv.config();
-const contactsRouter = require("./routes/api/contacts");
+require("./config/passport");
+const contactsRouter = require("./routes/contacts");
+const userRouter = require("./routes/user");
 
 const app = express();
 
@@ -29,6 +30,7 @@ mongoose.connection.once("open", () => {
   console.log("Database connection successful");
 });
 
+app.use("/api/users", userRouter);
 app.use("/api/contacts", contactsRouter);
 
 app.use((req, res) => {

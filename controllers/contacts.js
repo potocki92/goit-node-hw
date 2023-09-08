@@ -5,22 +5,19 @@ const {
   getContactById,
   addContact,
   removeContact,
-  updateContact,
-  updateFavoriteStatus,
-} = require("../../models/contacts");
+  update,
+} = require("../service/contacts.service");
 
-const router = express.Router();
-
-router.get("/", async (req, res, next) => {
+const getContacts = async (req, res, next) => {
   try {
     const contacts = await listContacts();
     res.status(200).json(contacts);
   } catch (error) {
     next(error);
   }
-});
+};
 
-router.get("/:contactId", async (req, res, next) => {
+const getContact = async (req, res, next) => {
   try {
     const contactId = req.params.contactId;
     const contact = await getContactById(contactId);
@@ -32,9 +29,9 @@ router.get("/:contactId", async (req, res, next) => {
       next(error);
     }
   }
-});
+};
 
-router.post("/", async (req, res, next) => {
+const createContact = async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
 
@@ -53,16 +50,17 @@ router.post("/", async (req, res, next) => {
       return;
     }
 
-    const newContact = await addContact(name, email, phone);
+    const newContact = await addContact(name, email, phone, req.user._id);
     res.status(201).json(newContact);
   } catch (error) {
     next(error);
   }
-});
+};
 
-router.delete("/:contactId", async (req, res, next) => {
+const deleteContact = async (req, res, next) => {
   try {
     const contactId = req.params.contactId;
+    console.log(contactId);
     await removeContact(contactId);
     res.status(200).json({ message: "contact deleted" });
   } catch (error) {
@@ -72,12 +70,15 @@ router.delete("/:contactId", async (req, res, next) => {
       next(error);
     }
   }
-});
+};
 
-router.put("/:contactId", async (req, res, next) => {
+const updateContact = async (req, res, next) => {
   try {
-    const contactId = req.params.contactId;
-    const { name, email, phone } = req.body;
+    const {
+      user,
+      body,
+      params: { contactId },
+    } = req;
 
     const schema = Joi.object({
       name: Joi.string(),
@@ -85,17 +86,43 @@ router.put("/:contactId", async (req, res, next) => {
       phone: Joi.string(),
     });
 
-    const { error } = schema.validate({ name, email, phone });
+    const { error } = schema.validate(body);
 
     if (error) {
       res.status(400).json({ message: "missing fields" });
       return;
     }
 
-    const updatedContact = await updateContact(contactId, {
-      name,
-      email,
-      phone,
+    const updatedContact = await update(user._id, contactId, body);
+    res.status(200).json(updatedContact);
+  } catch (error) {
+    if (error.message === "Contact not found") {
+      res.status(404).json({ message: "Not found" });
+    } else {
+      next(error);
+    }
+  }
+};
+
+const updateFavorite = async (req, res, next) => {
+  try {
+    const {
+      user,
+      body,
+      params: { contactId },
+    } = req;
+    const { favorite } = body;
+
+    const schema = Joi.object().keys({
+      favorite: Joi.boolean().required().messages({
+        "boolean.base": "Favorite must be a boolean",
+        "any.required": "Missing field favorite",
+      }),
+    });
+
+    await schema.validateAsync(body);
+    const updatedContact = await update(user._id, contactId, {
+      favorite,
     });
     res.status(200).json(updatedContact);
   } catch (error) {
@@ -105,26 +132,12 @@ router.put("/:contactId", async (req, res, next) => {
       next(error);
     }
   }
-});
-
-router.patch("/:contactId/favorite", async (req, res, next) => {
-  try {
-    const contactId = req.params.contactId;
-    const { favorite } = req.body;
-
-    if (typeof favorite !== "boolean") {
-      return res.status(400).json({ message: "missing field favorite" });
-    }
-
-    const updatedContact = await updateFavoriteStatus(contactId, favorite);
-
-    if (updatedContact) {
-      res.status(200).json(updatedContact);
-    } else {
-      res.status(404).json({ message: "Not found" });
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-module.exports = router;
+};
+module.exports = {
+  getContacts,
+  getContact,
+  createContact,
+  deleteContact,
+  updateFavorite,
+  updateContact,
+};
