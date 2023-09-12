@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const gravatar = require("gravatar");
 
 const userSchema = new mongoose.Schema({
   password: {
@@ -15,21 +16,27 @@ const userSchema = new mongoose.Schema({
     enum: ["starter", "pro", "business"],
     default: "starter",
   },
+  avatarURL: String,
   token: {
     type: String,
     default: null,
   },
 });
 userSchema.methods.setPassword = function (password) {
-  this.password = bCrypt.hashSync(
-    password,
-    bCrypt.genSaltSync(6)
-  );
+  this.password = bCrypt.hashSync(password, bCrypt.genSaltSync(6));
 };
 
 userSchema.methods.validPassword = function (password) {
   return bCrypt.compareSync(password, this.password);
 };
+
+userSchema.pre("save", function (next) {
+  if (!this.avatarURL) {
+    const avatar = gravatar.url(this.email, { s: "200", d: "retro" });
+    this.avatarURL = avatar;
+  }
+  next();
+});
 const User = new mongoose.model("User", userSchema);
 
 module.exports = User;
