@@ -9,6 +9,8 @@ const {
   findUserByToken,
 } = require("../service/user.service");
 const User = require("../models/user.model");
+const { send } = require("../service/email.service");
+const { v4: uuidv4 } = require("uuid");
 const SECRET = process.env.SECRET;
 
 const userSchema = Joi.object({
@@ -64,9 +66,14 @@ const signup = async (req, res, _) => {
     }
 
     const hashedPassword = await hashPassword(password);
+
+    const verificationToken = uuidv4();
+    send(email, verificationToken);
+
     await new User({
       email: toLowerCaseEmail,
       password: hashedPassword,
+      verificationToken: verificationToken,
     }).save();
     res.status(201).json({
       status: "Created",

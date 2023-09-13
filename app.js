@@ -7,7 +7,6 @@ dotenv.config();
 require("./config/passport");
 const contactsRouter = require("./routes/contacts");
 const userRouter = require("./routes/user");
-
 const app = express();
 
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
